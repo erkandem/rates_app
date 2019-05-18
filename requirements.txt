@@ -12,6 +12,7 @@ flask-praetorian==0.5.3
 Flask-RESTful==0.3.7
 flask-restplus==0.12.1
 Flask-SQLAlchemy==2.4.0
+gunicorn==19.9.0
 h11==0.8.1
 h2==3.1.0
 hpack==3.0.0
