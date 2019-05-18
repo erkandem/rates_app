@@ -6,7 +6,7 @@ server = os.getenv('RATE_APP_SERVER')
 config = os.getenv('RATE_APP_CONFI')
 
 if server == 'REMOTE':
-    uri = (
+    db_uri = (
         f"{os.getenv('RATE_APP_DB')}+{os.getenv('RATE_APP_DRIVER')}"
         f"://{os.getenv('RATE_APP_USER')}"
         f":{os.getenv('RATE_APP_PW')}"
@@ -15,8 +15,8 @@ if server == 'REMOTE':
         f"/{os.getenv('RATE_APP_DATABASE_NAME')}"
     )
 elif server == 'LOCAL':
-    if config == 'PROD':
-        uri = (
+    if config == 'PRODUCTION':
+        db_uri = (
             f"{os.getenv('RATE_APP_DB_LOC_PROD')}+{os.getenv('RATE_APP_DRIVER_LOC_PROD')}"
             f"://{os.getenv('RATE_APP_USER_LOC_PROD')}"
             f":{os.getenv('RATE_APP_PW_LOC_PROD')}"
@@ -25,10 +25,10 @@ elif server == 'LOCAL':
             f"/{os.getenv('RATE_APP_DATABASE_NAME_LOC_PROD')}"
         )
     elif config == 'DEV':
-        uri = 'sqlite:///:memory:'
+        db_uri = 'sqlite:///:memory:'
     else:
         raise ValueError('Value of environment variable RATE_APP_CONFIG not configured')
 else:
     raise ValueError('Value of environment variable RATE_APP_SERVER not configured')
 
-postgres_db = create_engine(uri)
+engine = create_engine(db_uri)

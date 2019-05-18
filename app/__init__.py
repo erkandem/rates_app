@@ -7,8 +7,8 @@ import flask_sqlalchemy
 import flask_praetorian
 import flask_cors
 from .api import api
+from app.db.engines import db_uri
 from .backend import ecb_initial
-from app.db.engines import postgres_db_uri
 db = flask_sqlalchemy.SQLAlchemy()
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
@@ -60,7 +60,7 @@ with app.app_context():
 '''
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = postgres_db_uri
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -68,7 +68,6 @@ db.init_app(app)
 cors.init_app(app)
 guard.init_app(app, User)
 api.init_app(app)
-
 
 
 if __name__ == '__main__':

@@ -1,1 +1,1 @@
-web: uwsgi wsgi:appplication
+web: uwsgi --wsgi-file wsgi.py --http 127.0.0.1:80

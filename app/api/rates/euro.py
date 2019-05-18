@@ -4,7 +4,7 @@ from flask_restplus import Resource
 from flask_restplus import Namespace
 from flask_restplus import fields
 from flask_restplus import reqparse
-from app.db.engines import postgres_db as engine
+from app.db.engines import  engine
 import flask_praetorian
 from app.backend.app import keys as db_columns
 

@@ -31,7 +31,7 @@ import certifi
 from sqlalchemy.orm import sessionmaker
 from app.backend.models import EuroYieldCurve
 from sqlalchemy.exc import IntegrityError
-from app.db.engines import postgres_db as engine
+from app.db.engines import engine
 
 #%%
 eu_yield_sets = [
