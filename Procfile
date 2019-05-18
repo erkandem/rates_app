@@ -1,1 +1,1 @@
-web: uwsgi --wsgi-file wsgi.py --http-socket :$(PORT)
+web: uwsgi --wsgi-file wsgi.py --http-socket :8080
