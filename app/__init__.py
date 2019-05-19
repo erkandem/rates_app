@@ -2,13 +2,14 @@
 https://www.fullstackpython.com/flask.html
 
 """
-from flask import Flask
+import flask
 import flask_sqlalchemy
 import flask_praetorian
 import flask_cors
 from .api import api
 from app.db.engines import db_uri
 from .backend import ecb_initial
+
 db = flask_sqlalchemy.SQLAlchemy()
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
@@ -48,6 +49,7 @@ class User(db.Model):
     def is_valid(self):
         return self.is_active
 
+
 '''
 with app.app_context():
     db.create_all()
@@ -58,16 +60,26 @@ with app.app_context():
     ))
     db.session.commit()
 '''
-app = Flask(__name__)
+
+app = flask.Flask(__name__)
 app.config['SECRET_KEY'] = 'secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 
 db.init_app(app)
 cors.init_app(app)
 guard.init_app(app, User)
 api.init_app(app)
+
+
+@app.route('/')
+def landing_page():
+    return flask.render_template('index.html')
+
+
+@app.route('/redoc')
+def redoc():
+    return flask.render_template('redoc.html')
 
 
 if __name__ == '__main__':

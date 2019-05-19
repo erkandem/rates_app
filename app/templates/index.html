@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>RFR Web App</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" crossorigin="anonymous">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" crossorigin="anonymous">
+      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+   </head>
+   <body>
+      <div class="container">
+         <h2> What's the risk free rate for the euro area like?</h2>
+         <div id="curve-plot"></div>
+         <div>
+            <p>Get the data of the plot above and more as simple as:</p>
+            <pre> curl -X GET "https://rfr.herokuapp.com/api/v1/euro/curve?startdate=2019-05-16"</pre>
+            <p> For more details visit the the swagger UI for the API <a href="/swaggerui">here</a></p>
+            <p> or ... get the <a href="/redoc">ReDoc flavoured documentation</a></p>
+
+         </div>
+      </div>
+      <script>
+         curve_plot = document.getElementById('curve-plot');
+         var xhr = new XMLHttpRequest();
+         var queryDay = '2019-05-16';
+         xhr.open('GET','https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay);
+         xhr.send();
+         // 4. This will be called after the response is received
+         xhr.onload = function() {
+             if (xhr.status != 200) {
+             } else {
+                 var data = {};
+                 data = JSON.parse(xhr.responseText);
+                 Plotly.plot( curve_plot, [{
+                     x: [3/12, 4/12, 6/12, 9/12, 1, 2, 5, 7, 10, 15, 30],
+                     y: [data[0]['py_3m'],
+                         data[0]['py_4m'],
+                         data[0]['py_6m'],
+                         data[0]['py_9m'],
+                         data[0]['py_1y'],
+                         data[0]['py_2y'],
+                         data[0]['py_5y'],
+                         data[0]['py_7y'],
+                         data[0]['py_10y'],
+                         data[0]['py_15y'],
+                         data[0]['py_30y']]
+                 }], {
+                     title: {text: 'Euro area risk free rate curve as of ' + queryDay},
+                     xaxis: {title: {text: 'log(year)'}, type: 'log'},
+                     yaxis: {title: {text: '% p.a.'}}
+                     }, {showSendToCloud:false}
+             );
+             }
+         };
+      </script>
+   </body>
+</html>
+
