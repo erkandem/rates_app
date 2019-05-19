@@ -4,12 +4,20 @@
       <meta charset="UTF-8">
       <title>RFR Web App</title>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous"/>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" integrity="sha256-2YQRJMXD7pIAPHiXr0s+vlRWA7GYJEK0ARns7k2sbHY=" crossorigin="anonymous"/>
-      <!--<link rel="stylesheet" href="static/sakura.css"> -->
+      <!--
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" integrity="sha256-2YQRJMXD7pIAPHiXr0s+vlRWA7GYJEK0ARns7k2sbHY=" crossorigin="anonymous"/>
+      -->
+      <link rel="stylesheet" href="static/sakura.css">
+      <link rel="stylesheet" href="static/basic.css">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/1.47.4/plotly.min.js" integrity="sha256-H/OgTJu16926oS2asyDpBQkSsZym43jAaWRoCBoRQeI=" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.js" integrity="sha256-ps39OudekZO7AVsJKqPapQgZ3EfKUh2kuhQ0f3E82ps=" crossorigin="anonymous"></script>
-      <script src="https://cdn.jsdelivr.net/npm/luxon@1.15.0/build/global/luxon.min.js" integrity="sha256-A8LDs60QiAI4IEJ4lWD9mUhv+bf9FYBVOJsH724wg1M=" crossorigin="anonymous"></script>
+      <!--
+         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js" integrity="sha256-7/yoZS3548fXSRXqc/xYzjsmuW3sFKzuvOCHd06Pmps=" crossorigin="anonymous"></script>
+      -->
+      <!--
+         <script src="https://cdn.jsdelivr.net/npm/luxon@1.15.0/build/global/luxon.min.js" integrity="sha256-A8LDs60QiAI4IEJ4lWD9mUhv+bf9FYBVOJsH724wg1M=" crossorigin="anonymous"></script>
+      -->
+
    </head>
    <body>
       <div class="container">
@@ -17,9 +25,39 @@
          <div id="curve-plot"></div>
          <div>
             <p>Get the data of the plot above and more as simple as:</p>
-            <pre> curl -X GET "https://rfr.herokuapp.com/api/v1/euro/curve?startdate=2019-05-16"</pre>
+            <pre id="command"> </pre>
             <p> For more details visit the the swagger UI for the API <a href="/swaggerui">here</a></p>
             <p> or ... get the <a href="/redoc">ReDoc flavoured documentation</a></p>
+            <p> Currently, there is no authentication required to use it.
+               Likewise the API comes with absolutely no warranty. </p>
+            <h3> About </h3>
+            <p>
+               Many pricing or valuation methods require a reference rate to be feed into the calculation.
+               In option pricing this rate is referenced to as the <code>risk free rate</code>. At his point
+               I would like to spare out the discussion whether this rate is 'free of risk'.
+               The actual source of the rate depends on use case. Generally, it is common to use
+               the par yield of government bonds of the specific currency area.
+            </p>
+            <p>It is desirable to have a rates of constant maturity. However
+               Most bonds have a fixed maturity. As such the time until maturity changes with each day.
+               Therefore the reference rate for a specific maturity is interpolated among bonds which have maturity
+               around the desired reference maturity.
+             </p>
+            <p>
+               These calculations are usually done by the respective central bank or government treasury department.
+               In case of the Unites States these data sets can be fetched with a single query via Quandl
+               or the Treasury itself.
+            </p>
+            <p>
+               While the Euro Area has similar service it is hideous to work with and agonizingly slow for
+               usages like a basic lookup. I usually went to query a year of data upfront.
+               Well, If it is that hard to access the data I could build a database right away.
+               ... And make it public.
+            </p>
+            <h3> Note </h3>
+            <p>
+               The data itself is not changed. You can read more about the methodology at the ECB Warehouse at <strong>LINK</strong>
+            <p>
          </div>
       </div>
       <script>
@@ -29,7 +67,9 @@
          var data = {};
          var queryDay = getPreviousWorkday();
          queryDay = queryDay.format('YYYY-MM-DD');
-         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay
+         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay;
+         var command = 'curl ' + "'" + apiUrl + "'";
+         document.getElementById('command').textContent = command;
          xhr.open('GET', apiUrl);
          xhr.send();
          xhr.onload = function() {
@@ -51,9 +91,14 @@
                        data[0]['py_15y'],
                        data[0]['py_30y']
                ];
-               var trace = [{x: xValues, y: yValues}];
+               var trace = [{
+                  x: xValues,
+                  y: yValues,
+                 line: {dash: 'dashdot'}
+               }];
                var layout = {
-                     title: {text: 'Euro area risk free rate curve as of ' + queryDay},
+
+                     title: {text: 'Euro area yield curve as of ' + queryDay},
                      xaxis: {title: {text: 'log(year)'}, type: 'log'},
                      yaxis: {title: {text: '% p.a.'}}
                };
@@ -61,18 +106,18 @@
                Plotly.plot( curve_plot, trace, layout, {showSendToCloud: false});
              }
          };
-         function getPreviousWorkday(){
+         function getPreviousWorkday(inputDate){
             // alternative: https://github.com/kalmecak/moment-business-days
             // Based on the current day, handle accordingly
             // credit: https://stackoverflow.com/a/36606408/10124294
-           switch(moment().day())
-           {
+           var inputDate_ = inputDate || moment();
+           switch(inputDate_.day()) {
               case 0:
-              case 1:
+                 return inputDate_.subtract(3, 'days');
               case 6:
-                 return moment().subtract(6,'days').day(5);
-               default:
-                 return moment().day(today - 1);
+                 return inputDate_.subtract(2, 'days');
+              default:
+                 return inputDate_.subtract(1, 'days');
            }
          }
       </script>

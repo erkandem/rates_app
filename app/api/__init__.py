@@ -19,9 +19,9 @@ api = Api(
         security='apikey',
         license='Client: BSD3, Data: See Manual, ',
         # license_url='/api/v1/licence',
-        contact='Volsurf - Sales',
-        contact_url='https://volsurf.com',
-        contact_email='info@volsurf.com')
+        contact='Erkan Demiralay',
+        contact_url='https://github.com/erkandem',
+        contact_email='erkan@erkan.io')
 '''
         # default_id=default_id,
         # default='default',
@@ -41,4 +41,3 @@ api.add_namespace(euro_ns, path='/euro')
 
 from flask_praetorian import PraetorianError
 PraetorianError.register_error_handler_with_flask_restplus(api)
-

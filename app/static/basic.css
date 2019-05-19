@@ -1,0 +1,9 @@
+
+body {
+    font-size: small;
+    line-height: 1.618;
+    max-width: 38em;
+    margin: auto;
+    padding: 13px;
+    font-family: 'Consolas', 'Monaco', 'Bitstream Vera Sans Mono', monospace;
+}
