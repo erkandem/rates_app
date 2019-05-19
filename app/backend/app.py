@@ -127,11 +127,9 @@ def rfr_eu(start_date: date, end_date: date):
     return results
 
 
-#%%
-
-
 def ecb_update(start_date: date = None, end_date: date = None):
     """ data acquisition """
+    print(f'{dt.now()} starting update')
     if start_date is None:
         start_date = date.today() - timedelta(days=5)
     if end_date is None:
@@ -152,6 +150,7 @@ def ecb_update(start_date: date = None, end_date: date = None):
         except IntegrityError:
             print(f'A collision for dt: {obj.dt} was caught')
             session.rollback()
+    print(f'{dt.now()} update executed')
     return
 
 

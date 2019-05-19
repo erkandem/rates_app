@@ -8,7 +8,7 @@ import flask_praetorian
 import flask_cors
 from .api import api
 from app.db.engines import db_uri
-from .backend import ecb_initial
+from .backend import ecb_update
 
 db = flask_sqlalchemy.SQLAlchemy()
 guard = flask_praetorian.Praetorian()
@@ -81,6 +81,11 @@ def landing_page():
 def redoc():
     return flask.render_template('redoc.html')
 
+
+@app.route('/HWLNMMM9ZC8RgdW9WKG3pVntoC8uQUWTyYHdEPikpakoRDr34o')
+def run_backend_update():
+    ecb_update()
+    return 'executed', 200
 
 if __name__ == '__main__':
     app.run(debug=True)

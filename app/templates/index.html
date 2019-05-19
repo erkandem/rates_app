@@ -3,9 +3,13 @@
    <head>
       <meta charset="UTF-8">
       <title>RFR Web App</title>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" crossorigin="anonymous">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" crossorigin="anonymous">
-      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous"/>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css" integrity="sha256-2YQRJMXD7pIAPHiXr0s+vlRWA7GYJEK0ARns7k2sbHY=" crossorigin="anonymous"/>
+      <!--<link rel="stylesheet" href="static/sakura.css"> -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/1.47.4/plotly.min.js" integrity="sha256-H/OgTJu16926oS2asyDpBQkSsZym43jAaWRoCBoRQeI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.js" integrity="sha256-ps39OudekZO7AVsJKqPapQgZ3EfKUh2kuhQ0f3E82ps=" crossorigin="anonymous"></script>
+      <script src="https://cdn.jsdelivr.net/npm/luxon@1.15.0/build/global/luxon.min.js" integrity="sha256-A8LDs60QiAI4IEJ4lWD9mUhv+bf9FYBVOJsH724wg1M=" crossorigin="anonymous"></script>
    </head>
    <body>
       <div class="container">
@@ -16,42 +20,61 @@
             <pre> curl -X GET "https://rfr.herokuapp.com/api/v1/euro/curve?startdate=2019-05-16"</pre>
             <p> For more details visit the the swagger UI for the API <a href="/swaggerui">here</a></p>
             <p> or ... get the <a href="/redoc">ReDoc flavoured documentation</a></p>
-
          </div>
       </div>
       <script>
          curve_plot = document.getElementById('curve-plot');
+         // Get the data from the API
          var xhr = new XMLHttpRequest();
-         var queryDay = '2019-05-16';
-         xhr.open('GET','https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay);
+         var data = {};
+         var queryDay = getPreviousWorkday();
+         queryDay = queryDay.format('YYYY-MM-DD');
+         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay
+         xhr.open('GET', apiUrl);
          xhr.send();
-         // 4. This will be called after the response is received
          xhr.onload = function() {
              if (xhr.status != 200) {
              } else {
-                 var data = {};
                  data = JSON.parse(xhr.responseText);
-                 Plotly.plot( curve_plot, [{
-                     x: [3/12, 4/12, 6/12, 9/12, 1, 2, 5, 7, 10, 15, 30],
-                     y: [data[0]['py_3m'],
-                         data[0]['py_4m'],
-                         data[0]['py_6m'],
-                         data[0]['py_9m'],
-                         data[0]['py_1y'],
-                         data[0]['py_2y'],
-                         data[0]['py_5y'],
-                         data[0]['py_7y'],
-                         data[0]['py_10y'],
-                         data[0]['py_15y'],
-                         data[0]['py_30y']]
-                 }], {
+               // format the data
+               var xValues = [3/12, 4/12, 6/12, 9/12, 1, 2, 5, 7, 10, 15, 30];
+               var yValues = [
+                       data[0]['py_3m'],
+                       data[0]['py_4m'],
+                       data[0]['py_6m'],
+                       data[0]['py_9m'],
+                       data[0]['py_1y'],
+                       data[0]['py_2y'],
+                       data[0]['py_5y'],
+                       data[0]['py_7y'],
+                       data[0]['py_10y'],
+                       data[0]['py_15y'],
+                       data[0]['py_30y']
+               ];
+               var trace = [{x: xValues, y: yValues}];
+               var layout = {
                      title: {text: 'Euro area risk free rate curve as of ' + queryDay},
                      xaxis: {title: {text: 'log(year)'}, type: 'log'},
                      yaxis: {title: {text: '% p.a.'}}
-                     }, {showSendToCloud:false}
-             );
+               };
+               // basic syntax: Plotly.plot(id, data, layout);
+               Plotly.plot( curve_plot, trace, layout, {showSendToCloud: false});
              }
          };
+         function getPreviousWorkday(){
+            // alternative: https://github.com/kalmecak/moment-business-days
+            // Based on the current day, handle accordingly
+            // credit: https://stackoverflow.com/a/36606408/10124294
+           switch(moment().day())
+           {
+              case 0:
+              case 1:
+              case 6:
+                 return moment().subtract(6,'days').day(5);
+               default:
+                 return moment().day(today - 1);
+           }
+         }
       </script>
    </body>
 </html>
