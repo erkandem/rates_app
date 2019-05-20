@@ -67,7 +67,7 @@
          var data = {};
          var queryDay = getPreviousWorkday();
          queryDay = queryDay.format('YYYY-MM-DD');
-         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve?startdate=' + queryDay;
+         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve/latest';
          var command = 'curl ' + "'" + apiUrl + "'";
          document.getElementById('command').textContent = command;
          xhr.open('GET', apiUrl);
