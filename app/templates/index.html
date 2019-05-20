@@ -114,6 +114,8 @@
            switch(inputDate_.day()) {
               case 0:
                  return inputDate_.subtract(3, 'days');
+              case 1:
+                 return inputDate_.subtract(4, 'days');
               case 6:
                  return inputDate_.subtract(2, 'days');
               default:
