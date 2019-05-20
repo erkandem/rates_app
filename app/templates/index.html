@@ -65,8 +65,6 @@
          // Get the data from the API
          var xhr = new XMLHttpRequest();
          var data = {};
-         var queryDay = getPreviousWorkday();
-         queryDay = queryDay.format('YYYY-MM-DD');
          var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve/latest';
          var command = 'curl ' + "'" + apiUrl + "'";
          document.getElementById('command').textContent = command;
@@ -98,7 +96,7 @@
                }];
                var layout = {
 
-                     title: {text: 'Euro area yield curve as of ' + queryDay},
+                     title: {text: 'Euro area yield curve as of ' +  data[0]['dt']},
                      xaxis: {title: {text: 'log(year)'}, type: 'log'},
                      yaxis: {title: {text: '% p.a.'}}
                };
@@ -106,22 +104,6 @@
                Plotly.plot( curve_plot, trace, layout, {showSendToCloud: false});
              }
          };
-         function getPreviousWorkday(inputDate){
-            // alternative: https://github.com/kalmecak/moment-business-days
-            // Based on the current day, handle accordingly
-            // credit: https://stackoverflow.com/a/36606408/10124294
-           var inputDate_ = inputDate || moment();
-           switch(inputDate_.day()) {
-              case 0:
-                 return inputDate_.subtract(3, 'days');
-              case 1:
-                 return inputDate_.subtract(4, 'days');
-              case 6:
-                 return inputDate_.subtract(2, 'days');
-              default:
-                 return inputDate_.subtract(1, 'days');
-           }
-         }
       </script>
    </body>
 </html>
