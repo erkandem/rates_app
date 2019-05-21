@@ -2,6 +2,7 @@
 https://www.fullstackpython.com/flask.html
 
 """
+import os
 import flask
 import flask_sqlalchemy
 import flask_praetorian
@@ -82,10 +83,12 @@ def redoc():
     return flask.render_template('redoc.html')
 
 
-@app.route('/HWLNMMM9ZC8RgdW9WKG3pVntoC8uQUWTyYHdEPikpakoRDr34o')
+@app.route('/' + os.getenv('RFR_APP_UPDATE_URI'), methods=['PUT'])
 def run_backend_update():
+    """update via RPC"""
     ecb_update()
     return 'executed', 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)
