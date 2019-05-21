@@ -1,5 +1,4 @@
 from datetime import datetime as dt
-
 from flask_restplus import Resource
 from flask_restplus import Namespace
 from flask_restplus import fields
@@ -9,6 +8,13 @@ import flask_praetorian
 from app.backend.app import keys as db_columns
 
 api = Namespace('Euro-Area Risk Free Rate')
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#                        Get a single column                                #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 single_ts_model = api.model(
     'single_ts', {
         'dt': fields.Date(),
@@ -49,8 +55,12 @@ def select_single_time_series(args: dict) -> str:
         FROM euro_area_yield_curve
         {where};'''
 
-##############################################################################
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#                   Get the latest record in the DB                         #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 single_ts_latest_parser = reqparse.RequestParser()
 single_ts_latest_parser.add_argument(
@@ -70,7 +80,11 @@ def select_single_latest(args: dict) -> str:
         LIMIT 1;'''
 
 
-##############################################################################
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#            Deliver all available maturities of the yield curve            #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 curve_model = api.model(
     'curve_ts', {
@@ -115,7 +129,11 @@ def select_curve(args: dict) -> str:
         FROM euro_area_yield_curve
         {where};'''
 
-##############################################################################
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#                      Get the latest yield curve set                       #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 def select_curve_latest() -> str:
@@ -125,7 +143,12 @@ def select_curve_latest() -> str:
         ORDER BY dt DESC
         LIMIT 1;'''
 
-##############################################################################
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#                     Routes                                                #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 @api.route('/curve/single', methods=['GET'])
