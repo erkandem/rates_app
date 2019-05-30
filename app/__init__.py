@@ -10,6 +10,7 @@ import flask_cors
 from .api import api
 from app.db.engines import db_uri
 from .backend import ecb_update
+import uuid
 
 db = flask_sqlalchemy.SQLAlchemy()
 guard = flask_praetorian.Praetorian()
@@ -23,9 +24,12 @@ class User(db.Model):
     powered by flask-praetorian
     """
     id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.Text)
     username = db.Column(db.Text, unique=True)
+    email = db.Column(db.Text)
     password = db.Column(db.Text)
     roles = db.Column(db.Text)
+    subscription = db.Column(db.Text, default=None)
     is_active = db.Column(db.Boolean, default=True, server_default='true')
 
     @property
@@ -51,6 +55,16 @@ class User(db.Model):
         return self.is_active
 
 
+app = flask.Flask(__name__)
+app.config['SECRET_KEY'] = 'secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+cors.init_app(app)
+guard.init_app(app, User)
+api.init_app(app)
+
 '''
 with app.app_context():
     db.create_all()
@@ -61,16 +75,6 @@ with app.app_context():
     ))
     db.session.commit()
 '''
-
-app = flask.Flask(__name__)
-app.config['SECRET_KEY'] = 'secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db.init_app(app)
-cors.init_app(app)
-guard.init_app(app, User)
-api.init_app(app)
 
 
 @app.route('/')
