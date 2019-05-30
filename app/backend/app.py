@@ -1,23 +1,4 @@
 """
-https://docs.sqlalchemy.org/en/13/orm/tutorial.html
-http://zetcode.com/db/sqlalchemy/orm/
-
-https://docs.python.org/3.7/library/logging.html
-https://docs.python.org/3.7/howto/logging-cookbook.html#logging-cookbook
-https://docs.python.org/3.7/howto/logging.html#logging-advanced-tutorial
-https://docs.python.org/3.7/howto/logging.html#logging-basic-tutorial
-
-https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
-
-https://sdw-wsrest.ecb.europa.eu/help/
-https://stackoverflow.com/questions/16491564/how-to-make-sqlalchemy-in-tornado-to-be-async#16503103
-http://python-notes.curiousefficiency.org/en/latest/python_concepts/import_traps.html
-
-http://python-notes.curiousefficiency.org/en/latest/pep_ideas/async_programming.html
-https://aiopg.readthedocs.io/en/stable/index.html
-https://github.com/fantix/gino
-
-https://sdw.ecb.europa.eu/browseSelection.do?df=true&ec=&dc=&oc=&pb=&rc=&DATASET=3&removeItem=&removedItemList=&mergeFilter=&activeTab=YC&showHide=&MAX_DOWNLOAD_SERIES=500&SERIES_MAX_NUM=50&node=9691417&legendRef=reference&legendNor=
 
 """
 
@@ -84,17 +65,10 @@ https = urllib3.PoolManager(
 content_header = {'Accept': 'application/vnd.sdmx.data+json;version=1.0.0-wd'}
 
 
-def rfr_eu(start_date: date, end_date: date):
+def rfr_eu(start_date: date, end_date: date)-> dict:
     """
     queries the risk free rate for the EUR
-    the supplied days will be offset by some dates
-    to ensure the essential minimum number of days
-    for operations like interpolation.
 
-    In the first half the function retrieves CSV data sets
-    and creates a n x m matrix of risk free rates index by date.
-
-    data source: ECB data ware house
     >>> rfr_eu(date(2019, 1, 1), date(2019, 1, 30))
 
     """

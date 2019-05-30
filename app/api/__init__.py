@@ -10,7 +10,7 @@ authorizations = {
 
 api = Api(
         title='Euro Area Rates API',
-        version='1.0.0',  # keep 3 digits style for Node.js
+        version='0.1.0',  # keep 3 digits style for Node.js
         description='Because ECB warehouse takes too long',
         # terms_url='/api/v1/terms-and-conditions',
         prefix='/api/v1',
@@ -19,9 +19,10 @@ api = Api(
         security='apikey',
         license='Client: BSD3, Data: See Manual, ',
         # license_url='/api/v1/licence',
-        contact='Erkan Demiralay',
-        contact_url='https://github.com/erkandem',
-        contact_email='erkan@erkan.io')
+        #contact='Erkan Demiralay',
+        #contact_url='https://github.com/erkandem',
+        #contact_email='erkan@erkan.io'
+)
 '''
         # default_id=default_id,
         # default='default',
