@@ -25,7 +25,7 @@ single_ts_parser = reqparse.RequestParser()
 single_ts_parser.add_argument(
     'startdate',
     type=str,
-    required=True,
+    required=False,
     help='yyyy-mm-dd'
 )
 single_ts_parser.add_argument(
@@ -44,6 +44,8 @@ single_ts_parser.add_argument(
 
 
 def select_single_time_series(args: dict) -> str:
+    if args['startdate'] is None:
+        return select_single_latest(args)
     startdate = dt.strptime(args['startdate'], '%Y-%m-%d').date()
     if args['enddate'] is None:
         where = f"WHERE dt = '{startdate}' "
@@ -54,22 +56,6 @@ def select_single_time_series(args: dict) -> str:
         SELECT dt, {args["strip"]} AS value
         FROM euro_area_yield_curve
         {where};'''
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                                                                           #
-#                   Get the latest record in the DB                         #
-#                                                                           #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-single_ts_latest_parser = reqparse.RequestParser()
-single_ts_latest_parser.add_argument(
-    'strip',
-    type=str,
-    required=True,
-    choices=db_columns,
-    help='',
-)
 
 
 def select_single_latest(args: dict) -> str:
@@ -106,7 +92,7 @@ curve_parser = reqparse.RequestParser()
 curve_parser.add_argument(
     'startdate',
     type=str,
-    required=True,
+    required=False,
     help='yyyy-mm-dd'
 )
 curve_parser.add_argument(
@@ -118,6 +104,8 @@ curve_parser.add_argument(
 
 
 def select_curve(args: dict) -> str:
+    if args['startdate'] is None:
+        return select_curve_latest()
     startdate = dt.strptime(args['startdate'], '%Y-%m-%d').date()
     if args['enddate'] is None:
         where = f"WHERE dt = '{startdate}' "
@@ -128,12 +116,6 @@ def select_curve(args: dict) -> str:
         SELECT   dt, {' ,'.join(db_columns)}
         FROM euro_area_yield_curve
         {where};'''
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#                                                                           #
-#                      Get the latest yield curve set                       #
-#                                                                           #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 def select_curve_latest() -> str:
@@ -151,6 +133,24 @@ def select_curve_latest() -> str:
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
+def serve_curve(args: dict) -> dict:
+    data = None
+    sql = select_curve(args)
+    with engine.connect() as con:
+        curs = con.execute(sql)
+        data = curs.fetchall()
+    return data
+
+
+def serve_single_strip(args: dict) -> dict:
+    data = None
+    sql = select_single_time_series(args)
+    with engine.connect() as con:
+        curs = con.execute(sql)
+        data = curs.fetchall()
+    return data
+
+
 @api.route('/curve/single', methods=['GET'])
 class SingleTimeSeries(Resource):
     @api.marshal_with(single_ts_model)
@@ -159,26 +159,7 @@ class SingleTimeSeries(Resource):
     def get(self):
         """Access a single maturity"""
         args = single_ts_parser.parse_args()
-        sql = select_single_time_series(args)
-        with engine.connect() as con:
-            curs = con.execute(sql)
-            data = curs.fetchall()
-        return data
-
-
-@api.route('/curve/single/latest', methods=['GET'])
-class SingleTimeSeriesLatest(Resource):
-    @api.marshal_with(single_ts_model)
-    @api.expect(single_ts_latest_parser)
-    # @flask_praetorian.auth_required
-    def get(self):
-        """ Access the latest set for a single maturity """
-        args = single_ts_latest_parser.parse_args()
-        sql = select_single_latest(args)
-        with engine.connect() as con:
-            curs = con.execute(sql)
-            data = curs.fetchall()
-        return data
+        return serve_single_strip(args)
 
 
 @api.route('/curve', methods=['GET'])
@@ -189,22 +170,4 @@ class YieldCurve(Resource):
     def get(self):
         """Get the full yield curve"""
         args = curve_parser.parse_args()
-        sql = select_curve(args)
-        with engine.connect() as con:
-            curs = con.execute(sql)
-            data = curs.fetchall()
-        return data
-
-
-@api.route('/curve/latest', methods=['GET'])
-class YieldCurveLatest(Resource):
-    @api.marshal_with(curve_model)
-    # @flask_praetorian.auth_required
-    def get(self):
-        """Get the latest yield curve data set in the database"""
-        sql = select_curve_latest()
-        with engine.connect() as con:
-            curs = con.execute(sql)
-            data = curs.fetchall()
-        return data
-
+        return serve_curve(args)
