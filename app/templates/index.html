@@ -65,7 +65,7 @@
          // Get the data from the API
          var xhr = new XMLHttpRequest();
          var data = {};
-         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve/latest';
+         var apiUrl = 'https://rfr.herokuapp.com/api/v1/euro/curve';
          var command = 'curl ' + "'" + apiUrl + "'";
          document.getElementById('command').textContent = command;
          xhr.open('GET', apiUrl);
