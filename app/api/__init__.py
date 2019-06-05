@@ -40,5 +40,8 @@ api = Api(
 from .rates import euro_ns
 api.add_namespace(euro_ns, path='/euro')
 
+#from .auth import api as auth_ns
+#api.add_namespace(auth_ns, path='/auth')
+
 from flask_praetorian import PraetorianError
 PraetorianError.register_error_handler_with_flask_restplus(api)

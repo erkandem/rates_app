@@ -139,8 +139,12 @@ def serve_curve(args: dict) -> dict:
     with engine.connect() as con:
         curs = con.execute(sql)
         data = curs.fetchall()
+    if len(data) != 0:
+        from app import count_data
+        count_data(data, database=os.getenv('RATE_APP_LOG_DB'))
     return data
 
+import os
 
 def serve_single_strip(args: dict) -> dict:
     data = None
@@ -148,6 +152,9 @@ def serve_single_strip(args: dict) -> dict:
     with engine.connect() as con:
         curs = con.execute(sql)
         data = curs.fetchall()
+    if len(data) != 0:
+        from app import count_data
+        count_data(data, database=os.getenv('RATE_APP_LOG_DB'))
     return data
 
 
@@ -155,7 +162,7 @@ def serve_single_strip(args: dict) -> dict:
 class SingleTimeSeries(Resource):
     @api.marshal_with(single_ts_model)
     @api.expect(single_ts_parser)
-    # @flask_praetorian.auth_required
+    #@flask_praetorian.auth_required
     def get(self):
         """Access a single maturity"""
         args = single_ts_parser.parse_args()
@@ -166,7 +173,7 @@ class SingleTimeSeries(Resource):
 class YieldCurve(Resource):
     @api.marshal_with(curve_model)
     @api.expect(curve_parser)
-    # @flask_praetorian.auth_required
+    #@flask_praetorian.auth_required
     def get(self):
         """Get the full yield curve"""
         args = curve_parser.parse_args()

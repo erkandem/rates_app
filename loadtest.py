@@ -1,37 +1,1 @@
-"""
-
- $ locust -f loadtest.py --host=https://rfr.herokuapp.com
-
- $ locust -f loadtest.py --host=http://127.0.0.1:5000
-
-"""
-from locust import HttpLocust, TaskSet, task
-
-host_1 = 'https://rfr.herokuapp.com'
-host_2 = 'http://127.0.0.1'
-
-
-class WebsiteTasks(TaskSet):
-    def on_start(self):
-        self.client.post("/login", {
-            "username": "test_user",
-            "password": ""
-        })
-
-    @task
-    def index(self):
-        self.client.get("/")
-
-    @task
-    def about(self):
-        self.client.get("/api/v1/euro/curve/latest/")
-
-    @task
-    def about(self):
-        self.client.get("/api/v1/euro/curve/single/latest?strip=py_3m")
-
-
-class WebsiteUser(HttpLocust):
-    task_set = WebsiteTasks
-    min_wait = 5000
-    max_wait = 15000
+""" $ locust -f loadtest.py --host=https://rfr.herokuapp.com $ locust -f loadtest.py --host=http://127.0.0.1:5000"""from locust import HttpLocust, TaskSet, taskimport jsonimport randomfrom datetime import datetime as dt, timedeltawith open('migration/test_users.json') as f:    test_users_dict = json.load(f)test_users = list(test_users_dict)heroku_host = 'https://rfr.herokuapp.com/api/v1'local_host = 'http://127.0.0.1:8000'class WebsiteTasks(TaskSet):    headers = None    def on_start(self):        user_n = random.randint(0, len(test_users))        user = test_users.pop(user_n)        self.headers = {'Authentication': 'failed'}        login = {"username": user, "password": test_users_dict[user]}        login = json.dumps(login).encode('utf-8')        response = self.client.post("/api/v1/auth/login", data=login)        if response.status_code == 200:            data = json.loads(response.content.decode('utf-8'))            token = data['access_token']            self.headers = {                'Authorization': f'Bearer {token}',                'Accept': 'application/json'            }        return    @task    def index(self):        self.client.get('/')    @task    def curve(self):        self.client.get('/api/v1/euro/curve', headers=self.headers)    @task    def single(self):        self.client.get('/api/v1/euro/curve/single?strip=py_3m',  headers=self.headers)    @task    def curve_multiple(self):        startdate = dt.now() - timedelta(days=random.SystemRandom().randint(1, 365 * 3))        delta = (dt.now() - startdate).days        enddate = startdate + timedelta(days=random.SystemRandom().randint(1, delta))        params = {            'startdate': startdate.date(),            'enddate': enddate.date(),        }        self.client.get(            f'/api/v1/euro/curve',            headers=self.headers,            params=params        )    @task    def single_multiple(self):        startdate = dt.now() - timedelta(days=random.SystemRandom().randint(1, 365 * 3))        delta = (dt.now() - startdate).days        enddate = startdate + timedelta(days=random.SystemRandom().randint(1, delta))        params = {            'strip': 'py_3m',            'startdate': startdate.date(),            'enddate': enddate.date(),        }        self.client.get(            f'/api/v1/euro/curve/single',            headers=self.headers,            params=params        )class WebsiteUser(HttpLocust):    host = local_host    task_set = WebsiteTasks    min_wait = 1000    max_wait = 2000
