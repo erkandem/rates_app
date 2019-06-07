@@ -1,3 +1,4 @@
+import os
 from datetime import datetime as dt
 from flask_restplus import Resource
 from flask_restplus import Namespace
@@ -6,6 +7,7 @@ from flask_restplus import reqparse
 from app.db.engines import engine
 import flask_praetorian
 from app.backend.app import keys as db_columns
+from app.metering import count_data
 
 api = Namespace('Euro-Area Risk Free Rate')
 
@@ -35,7 +37,7 @@ single_ts_parser.add_argument(
     help='yyyy-mm-dd'
 )
 single_ts_parser.add_argument(
-    'strip',
+    'maturity',
     type=str,
     required=True,
     choices=db_columns,
@@ -43,27 +45,27 @@ single_ts_parser.add_argument(
 )
 
 
-def select_single_time_series(args: dict) -> str:
-    if args['startdate'] is None:
-        return select_single_latest(args)
-    startdate = dt.strptime(args['startdate'], '%Y-%m-%d').date()
-    if args['enddate'] is None:
-        where = f"WHERE dt = '{startdate}' "
-    else:
-        enddate = dt.strptime(args['enddate'], '%Y-%m-%d').date()
-        where = f"WHERE dt BETWEEN '{startdate}' AND '{enddate}' "
-    return f'''
-        SELECT dt, {args["strip"]} AS value
-        FROM euro_area_yield_curve
-        {where};'''
-
-
-def select_single_latest(args: dict) -> str:
-    return f'''
-        SELECT dt, {args["strip"]} AS value
-        FROM euro_area_yield_curve
-        ORDER BY dt DESC
-        LIMIT 1;'''
+def select_maturity_in_one(args: dict) -> str:
+    startdate = args['startdate']
+    enddate = args['enddate']
+    maturity = args["maturity"]
+    if startdate is not None and enddate is None:
+        return f'''SELECT dt,  {maturity} AS value
+                    FROM  euro_area_yield_curve
+                    WHERE dt = '{startdate}';'''
+    elif startdate is None and enddate is None:
+        return f'''SELECT dt,  {maturity} AS value
+                    FROM  euro_area_yield_curve
+                    ORDER BY dt DESC
+                    LIMIT 1;'''
+    elif startdate is None and enddate is not None:
+        return f'''SELECT dt, {maturity} AS value
+                    FROM  euro_area_yield_curve
+                    WHERE dt = '{enddate}';'''
+    elif startdate is not None and enddate is not None:
+        return f'''SELECT dt,  {maturity} AS value
+                    FROM  euro_area_yield_curve
+                    WHERE dt BETWEEN '{startdate}' AND '{enddate}';'''
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -103,27 +105,49 @@ curve_parser.add_argument(
 )
 
 
-def select_curve(args: dict) -> str:
-    if args['startdate'] is None:
-        return select_curve_latest()
-    startdate = dt.strptime(args['startdate'], '%Y-%m-%d').date()
-    if args['enddate'] is None:
-        where = f"WHERE dt = '{startdate}' "
-    else:
-        enddate = dt.strptime(args['enddate'], '%Y-%m-%d').date()
-        where = f"WHERE dt BETWEEN '{startdate}' AND '{enddate}' "
-    return f'''
-        SELECT   dt, {' ,'.join(db_columns)}
-        FROM euro_area_yield_curve
-        {where};'''
+def select_curve_in_one(args: dict) -> str:
+    startdate = args['startdate']
+    enddate = args['enddate']
+    if startdate is not None and enddate is None:
+        return f'''SELECT  dt,  {' ,'.join(db_columns)}
+                    FROM euro_area_yield_curve
+                    WHERE dt = '{startdate}';'''
+    elif startdate is None and enddate is None:
+        return f'''SELECT  dt,  {' ,'.join(db_columns)}
+                    FROM euro_area_yield_curve
+                    ORDER BY dt DESC
+                    LIMIT 1;'''
+    elif startdate is None and enddate is not None:
+        return f'''SELECT  dt,  {' ,'.join(db_columns)}
+                    FROM euro_area_yield_curve
+                    WHERE dt = '{enddate}';'''
+    elif startdate is not None and enddate is not None:
+        return f'''SELECT  dt,  {' ,'.join(db_columns)}
+                    FROM euro_area_yield_curve
+                    WHERE dt BETWEEN '{startdate}' AND '{enddate}';'''
 
 
-def select_curve_latest() -> str:
-    return f'''
-        SELECT dt,  {' ,'.join(db_columns)}
-        FROM euro_area_yield_curve
-        ORDER BY dt DESC
-        LIMIT 1;'''
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                           #
+#                     Service                                               #
+#                                                                           #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+def serve_curve(args: dict) -> dict:
+    sql = select_curve_in_one(args)
+    with engine.connect() as con:
+        curs = con.execute(sql)
+        data = curs.fetchall()
+    return data
+
+
+def serve_single_maturity(args: dict) -> dict:
+    sql = select_maturity_in_one(args)
+    with engine.connect() as con:
+        curs = con.execute(sql)
+        data = curs.fetchall()
+    return data
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -132,49 +156,23 @@ def select_curve_latest() -> str:
 #                                                                           #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-
-def serve_curve(args: dict) -> dict:
-    data = None
-    sql = select_curve(args)
-    with engine.connect() as con:
-        curs = con.execute(sql)
-        data = curs.fetchall()
-    if len(data) != 0:
-        from app import count_data
-        count_data(data, database=os.getenv('RATE_APP_LOG_DB'))
-    return data
-
-import os
-
-def serve_single_strip(args: dict) -> dict:
-    data = None
-    sql = select_single_time_series(args)
-    with engine.connect() as con:
-        curs = con.execute(sql)
-        data = curs.fetchall()
-    if len(data) != 0:
-        from app import count_data
-        count_data(data, database=os.getenv('RATE_APP_LOG_DB'))
-    return data
-
-
-@api.route('/curve/single', methods=['GET'])
+@api.route('/curve/maturity', methods=['GET'])
 class SingleTimeSeries(Resource):
     @api.marshal_with(single_ts_model)
     @api.expect(single_ts_parser)
-    #@flask_praetorian.auth_required
+    @flask_praetorian.auth_required
     def get(self):
         """Access a single maturity"""
         args = single_ts_parser.parse_args()
-        return serve_single_strip(args)
+        return count_data(serve_single_maturity(args))
 
 
 @api.route('/curve', methods=['GET'])
 class YieldCurve(Resource):
     @api.marshal_with(curve_model)
     @api.expect(curve_parser)
-    #@flask_praetorian.auth_required
+    @flask_praetorian.auth_required
     def get(self):
         """Get the full yield curve"""
         args = curve_parser.parse_args()
-        return serve_curve(args)
+        return count_data(serve_curve(args))

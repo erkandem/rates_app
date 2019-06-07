@@ -4,7 +4,7 @@ from flask_restplus import fields
 from flask_restplus import reqparse
 import flask
 
-api = Namespace('authentication')
+api = Namespace('Authentication')
 
 
 login_model = api.model(
